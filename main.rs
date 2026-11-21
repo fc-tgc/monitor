@@ -31,3 +31,20 @@ fn semilla() -> u32 {
         .expect("reloj antes de 1970")
         .subsec_nanos()
 }
+
+/// Hilo de un nodo. Si `latidos_hasta_caer` es Some(n), envia n latidos y muere.
+fn nodo(id: usize, tx: Sender<Heartbeat>, latidos_hasta_caer: Option<u64>) {
+    let mut seq = 0;
+    loop {
+        if latidos_hasta_caer == Some(seq) {
+            println!("[Nodo {id}] CRASH: se cae (deja de enviar heartbeats)");
+            return;
+        }
+
+        if tx.send(Heartbeat { id, seq }).is_err() {
+            return;
+        }
+        seq += 1;
+        thread::sleep(INTERVALO_HEARTBEAT);
+    }
+}
