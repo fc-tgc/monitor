@@ -114,3 +114,28 @@ fn monitor(rx: Receiver<Heartbeat>) {
         println!("  Nodo {id}: {e:?}");
     }
 }
+
+fn main() {
+    let s = semilla();
+    let nodo_que_cae = (s as usize) % NUM_NODOS;
+    let latidos_antes_de_caer = 2 + (s as u64 / 7) % 4; // entre 2 y 5 latidos
+    println!(
+        "Simulacion: el Nodo {nodo_que_cae} caera tras {latidos_antes_de_caer} latidos\n"
+    );
+
+    let (tx, rx) = mpsc::channel();
+    let mut handles = Vec::with_capacity(NUM_NODOS);
+
+    for id in 0..NUM_NODOS {
+        let tx = tx.clone();
+        let caida = (id == nodo_que_cae).then_some(latidos_antes_de_caer);
+        handles.push(thread::spawn(move || nodo(id, tx, caida)));
+    }
+    drop(tx); // solo los nodos mantienen Senders vivos
+
+    monitor(rx); // al volver, rx se dropea y los nodos sanos terminan solos
+
+    for h in handles {
+        h.join().expect("un nodo hizo panic");
+    }
+}
