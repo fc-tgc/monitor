@@ -25,7 +25,7 @@ cargo build --release
 cargo run --release
 ```
 
-La simulacion dura 6 segundos y termina sola.
+La simulacion dura unos segundos y termina sola.
 
 Para ver solo los cambios de estado, sin las lineas de cada latido:
 
